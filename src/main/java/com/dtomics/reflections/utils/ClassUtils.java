@@ -1,6 +1,7 @@
 package com.dtomics.reflections.utils;
 
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public final class ClassUtils {
         }
     }
 
-    public static List<Class<?>> forName(List<String> values, ClassLoader classLoader) {
+    public static List<Class<?>> forName(Collection<String> values, ClassLoader classLoader) {
         return values.stream().map(s -> forName(s, classLoader)).collect(Collectors.toList());
     }
 
