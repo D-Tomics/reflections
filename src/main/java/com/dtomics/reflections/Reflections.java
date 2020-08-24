@@ -2,16 +2,24 @@ package com.dtomics.reflections;
 
 import com.dtomics.reflections.classReaders.ClassReader;
 import com.dtomics.reflections.scanners.AnnotatedClassScanner;
+import com.dtomics.reflections.scanners.AnnotatedExecutableScanner;
+import com.dtomics.reflections.scanners.AnnotatedFieldScanner;
 import com.dtomics.reflections.scanners.Scanner;
+import com.dtomics.reflections.utils.ClassUtils;
+import com.dtomics.reflections.utils.ReflectionUtils;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import static com.dtomics.reflections.utils.ClassUtils.forName;
 import static com.dtomics.reflections.utils.ClassUtils.index;
@@ -92,6 +100,45 @@ public final class Reflections {
             if(scanner.getClass().equals(scannerType))
                 return scannerType.cast(scanner);
         return null;
+    }
+
+    public List<Class<?>> getTypesAnnotatedWith(Class<? extends Annotation> annotationType) {
+        return forName(cache.getElementsOf(AnnotatedClassScanner.class).get(index(annotationType)), loader());
+    }
+
+    public Set<Method> getMethodsAnnotatedWith(Class<? extends Annotation> annotationType, Class<?> of) {
+        Set<String> methodSignatures = cache.getElementsOf(AnnotatedExecutableScanner.class).get(index(annotationType));
+        return methodSignatures.stream()
+                .filter(ReflectionUtils::isMethod)
+                .map(signature -> ClassUtils.getDeclaredMethod(
+                        of,
+                        ReflectionUtils.extractMethodName(signature),
+                        ReflectionUtils.getParameterTypesFromSignature(signature, of, loader()).toArray(new Class<?>[0])
+                        )
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Constructor> getConstructorsAnnotatedWith(Class<? extends Annotation> annotationType, Class<?> of) {
+        Set<String> constructorSignatures = cache.getElementsOf(AnnotatedExecutableScanner.class).get(index(annotationType));
+        return constructorSignatures.stream()
+                .filter(ReflectionUtils::isConstructor)
+                .map(signature -> ClassUtils.getDeclaredConstructor(
+                            of,
+                            ReflectionUtils.getParameterTypesFromSignature(signature, of, loader()).toArray(new Class<?>[0])
+                        )
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Field> getFieldsAnnotatedWith(Class<? extends Annotation> annotationType, Class<?> of) {
+        Set<String> fieldSignatures = cache.getElementsOf(AnnotatedFieldScanner.class).get(index(annotationType));
+        return fieldSignatures.stream()
+                .map(signature -> ClassUtils.getDeclaredField(of, ReflectionUtils.extractFieldName(signature)))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     private void onScan(final Class<?> type) {
