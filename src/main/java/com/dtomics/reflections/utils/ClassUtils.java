@@ -1,10 +1,10 @@
 package com.dtomics.reflections.utils;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dtomics.reflections.ReflectionConstants.ARRAY_SUFFIX;
@@ -51,6 +51,37 @@ public final class ClassUtils {
             throw new IllegalArgumentException("Cannot index null");
         return cls.getCanonicalName();
     }
+
+    public static Field getDeclaredField(Class<?> of, String name) {
+        Objects.requireNonNull(of,"class of the field["+name+"] cannot be null");
+        try {
+            return of.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Constructor getDeclaredConstructor(Class<?> of, Class<?>...parameterTypes) {
+        Objects.requireNonNull(of, "class of the required constructor cannot be null");
+        try {
+            return of.getDeclaredConstructor(parameterTypes);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Method getDeclaredMethod(Class<?> of, String name, Class<?>...parameterTypes) {
+        Objects.requireNonNull(of, "class of required method["+name+"] cannot be null");
+        try {
+            return of.getDeclaredMethod(name,parameterTypes);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     private static Class<?> resolvePrimitiveTypes(String className) {
         Class<?> result = null;
