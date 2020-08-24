@@ -81,7 +81,7 @@ public final class ReflectionUtils {
 
     public static String extractClassName(String signature) {
         if(isValidSignature(signature)) {
-            int index = signature.lastIndexOf(SEPARATOR_START);
+            int index = signature.indexOf(SEPARATOR_START);
             return signature.substring(0, index);
         }
         throw new InvalidSignatureException(signature,"class");
