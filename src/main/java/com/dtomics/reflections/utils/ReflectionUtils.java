@@ -27,7 +27,7 @@ public final class ReflectionUtils {
                 index,
                 method.getName(),
                 Arrays.stream(parameterTypes)
-                        .map(Class::getCanonicalName)
+                        .map(ClassUtils::index)
                         .collect(Collectors.joining(PARAMETER_DELIMITER))
         );
     }
@@ -42,7 +42,7 @@ public final class ReflectionUtils {
                 CONSTRUCTOR_FORMAT,
                 index,
                 Arrays.stream(parameterTypes)
-                        .map(Class::getCanonicalName)
+                        .map(ClassUtils::index)
                         .collect(Collectors.joining(PARAMETER_DELIMITER))
         );
     }
