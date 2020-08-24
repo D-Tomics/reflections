@@ -2,8 +2,8 @@ package com.dtomics.reflections.utils;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dtomics.reflections.ReflectionConstants.ARRAY_SUFFIX;
@@ -41,8 +41,8 @@ public final class ClassUtils {
         }
     }
 
-    public static Set<Class<?>> forName(Set<String> values, ClassLoader classLoader) {
-        return values.stream().map(s -> forName(s, classLoader)).collect(Collectors.toSet());
+    public static List<Class<?>> forName(List<String> values, ClassLoader classLoader) {
+        return values.stream().map(s -> forName(s, classLoader)).collect(Collectors.toList());
     }
 
     public static String index(Class<?> cls) {
