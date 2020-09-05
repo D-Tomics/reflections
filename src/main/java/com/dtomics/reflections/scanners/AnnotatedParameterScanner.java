@@ -24,15 +24,17 @@ public class AnnotatedParameterScanner implements Scanner{
 
         for(Executable executable : executables) {
             Parameter[] parameters = executable.getParameters();
+            int index = 0;
             for(Parameter parameter : parameters) {
                 Annotation[] annotations = parameter.getAnnotations();
                 for(Annotation annotation : annotations) {
                     cache.put(
                             AnnotatedParameterScanner.class,
                             ClassUtils.index(annotation.annotationType()),
-                            ReflectionUtils.getExecutableParamSignature(type, executable, parameter)
+                            ReflectionUtils.getExecutableParamSignature(type, executable, parameter, index)
                     );
                 }
+                index++;
             }
         }
     }

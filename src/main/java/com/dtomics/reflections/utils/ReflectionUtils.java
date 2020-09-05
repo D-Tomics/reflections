@@ -5,7 +5,6 @@ import com.dtomics.reflections.exceptions.InvalidSignatureException;
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.dtomics.reflections.ReflectionConstants.*;
 
@@ -29,15 +28,7 @@ public final class ReflectionUtils {
     }
 
     public static String getMethodSignature(String index, Method method) {
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        return String.format(
-                METHOD_FORMAT,
-                index,
-                method.getName(),
-                Arrays.stream(parameterTypes)
-                        .map(ClassUtils::index)
-                        .collect(Collectors.joining(PARAMETER_DELIMITER))
-        );
+        return String.format(METHOD_FORMAT, index, method.getName(), getParameterTypesSignature(method));
     }
 
     public static String getConstructorSignature(Class<?> cls, Constructor<?> constructor) {
@@ -45,14 +36,7 @@ public final class ReflectionUtils {
     }
 
     public static String getConstructorSignature(String index, Constructor<?> constructor) {
-        Class<?>[] parameterTypes = constructor.getParameterTypes();
-        return String.format(
-                CONSTRUCTOR_FORMAT,
-                index,
-                Arrays.stream(parameterTypes)
-                        .map(ClassUtils::index)
-                        .collect(Collectors.joining(PARAMETER_DELIMITER))
-        );
+        return String.format(CONSTRUCTOR_FORMAT, index, getParameterTypesSignature(constructor));
     }
 
     public static String getExecutableSignature(Class<?> cls, Executable executable) {
@@ -63,12 +47,12 @@ public final class ReflectionUtils {
         return executable instanceof Method ? getMethodSignature(index, (Method) executable) : getConstructorSignature(index, (Constructor<?>) executable);
     }
 
-    public static String getExecutableParamSignature(Class<?> cls, Executable executable, Parameter parameter) {
-        return getExecutableParamSignature(getExecutableSignature(cls, executable), parameter);
+    public static String getExecutableParamSignature(Class<?> cls, Executable executable, Parameter parameter, int index) {
+        return getExecutableParamSignature(getExecutableSignature(cls, executable), parameter, index);
     }
 
-    public static String getExecutableParamSignature(String signature, Parameter parameter) {
-        return String.format(EXECUTABLE_PARAMETER_FORMAT, signature, parameter.getName(), parameter.getType());
+    public static String getExecutableParamSignature(String signature, Parameter parameter, int index) {
+        return String.format(EXECUTABLE_PARAMETER_FORMAT, signature, ClassUtils.index(parameter.getType()),index);
     }
 
     public static boolean isMethod(String signature) {
@@ -108,7 +92,10 @@ public final class ReflectionUtils {
                 isValidConstructorSignature(signature)) {
             int index = signature.indexOf(EXECUTABLE_PARAM_START) + EXECUTABLE_PARAM_START.length();
             String parameterString = signature.substring(index,signature.indexOf(EXECUTABLE_PARAM_END));
-            return parameterString.split(",");
+            String[] pTypes = parameterString.split(PARAMETER_DELIMITER);
+            for(int i = 0; i < pTypes.length; i++)
+                pTypes[i] = pTypes[i].split(" ")[0];
+            return pTypes;
         }
         throw new InvalidSignatureException(signature,"parameter");
     }
@@ -134,6 +121,15 @@ public final class ReflectionUtils {
                 isValidConstructorSignature(signature) ||
                 isValidFieldSignature(signature) ||
                 isValidParamSignature(signature);
+    }
+
+    private static String getParameterTypesSignature(Executable executable) {
+        Class<?>[] paramTypes = executable.getParameterTypes();
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i = 0; i < paramTypes.length; i++) {
+            stringBuilder.append(ClassUtils.index(paramTypes[i])).append(" ").append(i).append(PARAMETER_DELIMITER);
+        }
+        return stringBuilder.substring(0, stringBuilder.length() - 1);
     }
 
 }

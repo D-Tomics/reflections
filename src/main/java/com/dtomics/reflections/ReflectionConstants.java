@@ -5,6 +5,7 @@ public final class ReflectionConstants {
             ARRAY_SUFFIX = "[]",
             CLASS_FILE_SUFFIX = ".class",
             PARAMETER_DELIMITER = ",",
+            PARAMETER_INDEX_START = "-",
             EXECUTABLE_PARAM_END = ")",
             EXECUTABLE_PARAM_START = "(",
             SEPARATOR_START = "<",
@@ -16,6 +17,6 @@ public final class ReflectionConstants {
             FIELD_FORMAT = "%s" + FIELD_SEPARATOR + "%s", // class name - field name
             METHOD_FORMAT = "%s" + METHOD_SEPARATOR + "%s(%s)",  // class name - method name - method params
             CONSTRUCTOR_FORMAT = "%s" + CONSTRUCTOR_SEPARATOR + "(%s)", // class name - constructor params
-            EXECUTABLE_PARAMETER_FORMAT = "%s"+PARAMETER_SEPARATOR+"%s<%s>"; // index - param name - param type
+            EXECUTABLE_PARAMETER_FORMAT = "%s"+PARAMETER_SEPARATOR+"%s"+ PARAMETER_INDEX_START +"%d"; // index - param type - parameter pos
             // index could be a method signature or a constructor signature
 }
