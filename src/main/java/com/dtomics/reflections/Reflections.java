@@ -1,6 +1,7 @@
 package com.dtomics.reflections;
 
 import com.dtomics.reflections.classReaders.ClassReader;
+import com.dtomics.reflections.exceptions.ScannerAlreadyRegisteredException;
 import com.dtomics.reflections.scanners.AnnotatedClassScanner;
 import com.dtomics.reflections.scanners.AnnotatedExecutableScanner;
 import com.dtomics.reflections.scanners.AnnotatedFieldScanner;
@@ -86,8 +87,9 @@ public final class Reflections {
     }
 
     public void addScanner(Scanner scanner) {
+        this.cache.register(scanner.getClass());
         if(!this.scanners.add(scanner))
-            throw new IllegalArgumentException("trying to add " + scanner.getClass().getName() + " scanner that already exits");
+            throw new ScannerAlreadyRegisteredException(scanner.getClass());
     }
 
     public void addReader(ClassReader reader) {

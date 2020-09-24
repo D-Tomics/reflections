@@ -1,5 +1,6 @@
 package com.dtomics.reflections;
 
+import com.dtomics.reflections.exceptions.ScannerAlreadyRegisteredException;
 import com.dtomics.reflections.exceptions.ScannerNotRegisteredException;
 import com.dtomics.reflections.scanners.Scanner;
 
@@ -14,6 +15,13 @@ public final class Cache {
         this.cache = new ConcurrentHashMap<>();
     }
 
+    protected void register(Class<? extends Scanner> scanner) {
+        if(this.cache.containsKey(scanner))
+            throw new ScannerAlreadyRegisteredException(scanner);
+
+        this.cache.put(scanner,new HashMap<>());
+    }
+
     public void put(Class<? extends Scanner> scannerClass, String key, String...values) {
         cache
                 .computeIfAbsent(scannerClass, sc -> new HashMap<>())
@@ -25,7 +33,7 @@ public final class Cache {
         Map<String, Set<String>> keyValues = cache.get(scannerClass);
         if(keyValues == null)
             throw new ScannerNotRegisteredException(scannerClass);
-        return cache.get(scannerClass);
+        return keyValues;
     }
 
     public Set<String> get(Class<? extends Scanner> scannerClass, String key) {
