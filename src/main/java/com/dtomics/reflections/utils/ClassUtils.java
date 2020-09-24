@@ -25,6 +25,7 @@ public final class ClassUtils {
     }};
 
     public static Class<?> forName(String canonicalName, ClassLoader classLoader) {
+        if(canonicalName == null) return null;
         Class<?> cls = resolvePrimitiveTypes(canonicalName);
         if (cls != null)
             return cls;
@@ -43,7 +44,7 @@ public final class ClassUtils {
     }
 
     public static List<Class<?>> forName(Collection<String> values, ClassLoader classLoader) {
-        return values.stream().map(s -> forName(s, classLoader)).collect(Collectors.toList());
+        return values != null ? values.stream().map(s -> forName(s, classLoader)).collect(Collectors.toList()) : null;
     }
 
     public static String index(Class<?> cls) {
