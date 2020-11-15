@@ -15,13 +15,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static com.dtomics.reflections.ReflectionConstants.CLASS_FILE_SUFFIX;
 import static com.dtomics.reflections.utils.ClassUtils.forName;
 import static com.dtomics.reflections.utils.ClassUtils.index;
 
@@ -36,12 +42,16 @@ public final class Reflections {
 
     private ExecutorService executorService;
 
+    public Reflections(Class<?> cls, ClassLoader classLoader) {
+        this(cls.getCanonicalName() + CLASS_FILE_SUFFIX, classLoader);
+    }
+
     public Reflections(String packageName, ClassLoader classLoader) {
         this(packageName, classLoader, false, Executors.newCachedThreadPool());
     }
 
     public Reflections(String packageName, ClassLoader classLoader, boolean loadWithProvidedClassLoader, ExecutorService executorService) {
-        if(packageName == null)
+        if (packageName == null)
             throw new IllegalArgumentException("package cannot be null");
 
         this.cache = new Cache();
@@ -58,21 +68,29 @@ public final class Reflections {
 
     public void scan() {
         try {
-            if(classReaders.isEmpty()) return;
+            if (classReaders.isEmpty()) return;
             List<Future<?>> futures = new ArrayList<>();
-            Enumeration<URL> resources = classLoader.getResources(packageName.replace(".", "/"));
+            String resource =
+                    packageName.endsWith(CLASS_FILE_SUFFIX) ?
+                            packageName
+                                    .substring(0, packageName.length() - CLASS_FILE_SUFFIX.length())
+                                    .replace(".", "/")
+                                    .concat(CLASS_FILE_SUFFIX) :
+                            packageName.replace(".", "/");
+
+            Enumeration<URL> resources = classLoader.getResources(resource);
             while (resources.hasMoreElements()) {
                 final URL url = resources.nextElement();
                 if (url == null) continue;
-                if(executorService != null) {
+                if (executorService != null) {
                     futures.add(executorService.submit(() -> readClass(url, packageName)));
                     continue;
                 }
                 readClass(url, packageName);
             }
 
-            if(executorService != null) {
-                for(Future future : futures) {
+            if (executorService != null) {
+                for (Future future : futures) {
                     try {
                         future.get();
                     } catch (InterruptedException | ExecutionException e) {
@@ -88,18 +106,18 @@ public final class Reflections {
 
     public void addScanner(Scanner scanner) {
         this.cache.register(scanner.getClass());
-        if(!this.scanners.add(scanner))
+        if (!this.scanners.add(scanner))
             throw new ScannerAlreadyRegisteredException(scanner.getClass());
     }
 
     public void addReader(ClassReader reader) {
-        if(!this.classReaders.add(reader))
+        if (!this.classReaders.add(reader))
             throw new IllegalArgumentException("trying to add " + reader.getClass().getName() + " reader that already exists");
     }
 
     public <T extends Scanner> T getScanner(Class<T> scannerType) {
-        for(Scanner scanner : scanners)
-            if(scanner.getClass().equals(scannerType))
+        for (Scanner scanner : scanners)
+            if (scanner.getClass().equals(scannerType))
                 return scannerType.cast(scanner);
         return null;
     }
@@ -127,8 +145,8 @@ public final class Reflections {
         return constructorSignatures.stream()
                 .filter(ReflectionUtils::isConstructor)
                 .map(signature -> ClassUtils.getDeclaredConstructor(
-                            of,
-                            ReflectionUtils.getParameterTypesFromSignature(signature, of, loader()).toArray(new Class<?>[0])
+                        of,
+                        ReflectionUtils.getParameterTypesFromSignature(signature, of, loader()).toArray(new Class<?>[0])
                         )
                 )
                 .filter(Objects::nonNull)
@@ -143,16 +161,21 @@ public final class Reflections {
                 .collect(Collectors.toSet());
     }
 
+    public void clear() {
+        cache.clear();
+        scanners.clear();
+    }
+
     private void onScan(final Class<?> type) {
-        if(type == null) return;
-        for(Scanner scanner : scanners) {
-            scanner.onScan(type,cache);
+        if (type == null) return;
+        for (Scanner scanner : scanners) {
+            scanner.onScan(type, cache);
         }
     }
 
     private void readClass(URL url, String packageName) {
-        for(ClassReader classReader : classReaders)
-            classReader.read(url, packageName,loader()).forEach(this::onScan);
+        for (ClassReader classReader : classReaders)
+            classReader.read(url, packageName, loader()).forEach(this::onScan);
     }
 
     private ClassLoader loader() {
