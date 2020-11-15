@@ -2,9 +2,11 @@ package com.dtomics.reflections;
 
 import com.dtomics.reflections.classReaders.ClassReader;
 import com.dtomics.reflections.exceptions.ScannerAlreadyRegisteredException;
+import com.dtomics.reflections.scanners.AnnotatedClassFieldScanner;
 import com.dtomics.reflections.scanners.AnnotatedClassScanner;
 import com.dtomics.reflections.scanners.AnnotatedExecutableScanner;
 import com.dtomics.reflections.scanners.AnnotatedFieldScanner;
+import com.dtomics.reflections.scanners.FieldScanner;
 import com.dtomics.reflections.scanners.Scanner;
 import com.dtomics.reflections.utils.ClassUtils;
 import com.dtomics.reflections.utils.ReflectionUtils;
@@ -149,6 +151,22 @@ public final class Reflections {
                         ReflectionUtils.getParameterTypesFromSignature(signature, of, loader()).toArray(new Class<?>[0])
                         )
                 )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Field> getFieldsOf(Class<?> of) {
+        Set<String> filedSignatures = cache.getElementsOf(FieldScanner.class).get(index(of));
+        return filedSignatures != null ? filedSignatures.stream()
+                .map(signature -> ClassUtils.getDeclaredField(of, ReflectionUtils.extractFieldName(signature)))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()) : null;
+    }
+
+    public Set<Field> getFieldsOfAnnotatedClass(Class<?> of) {
+        Set<String> fieldSignatures = cache.getElementsOf(AnnotatedClassFieldScanner.class).get(index(of));
+        return fieldSignatures.stream()
+                .map(signature -> ClassUtils.getDeclaredField(of, ReflectionUtils.extractFieldName(signature)))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
